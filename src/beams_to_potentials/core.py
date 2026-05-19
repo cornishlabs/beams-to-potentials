@@ -69,10 +69,11 @@ species = {
             1066: 1825,
         },
     },
+    # -N/(2N+3) is the prefactor of alpha_2, See lab book 19th May 2026. From on-diagonal elements of H_AC
     "RbCs33": {
         "m": m_rbcs,
         "pols": {
-            817: 443 - (1 / 3) * (-2816),
+            817:  443 - (1 / 3) * (-2816),
             1065: 1825 - (1 / 3) * 1981,
             1066: 1825 - (1 / 3) * 1981,
         },
