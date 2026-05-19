@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass
-from math import floor, log10
 
 import numpy as np
 from scipy.optimize import curve_fit
@@ -12,27 +11,16 @@ from scipy.optimize import curve_fit
 from .constants import H, U
 
 
-def sqrt_scaling(x, scale: float):
-    return scale * x ** (1 / 2)
-
-
-def format_value_error(value: float, error: float) -> str:
-    precision = floor(log10(error))
-    rounded_error = round(error / 10**precision) * 10**precision
-    rounded_value = round(value / 10**precision) * 10**precision
-    if precision > 0:
-        return "{:.0f}({:.0f})".format(rounded_value, rounded_error)
-    return "{:.{prec}f}({:.0f})".format(
-        rounded_value, rounded_error * 10**-precision, prec=-precision
-    )
-
-
 def quadratic_potential(x, x0: float, curvature: float, y0: float):
+    """Quadratic potential in MHz for position ``x`` in um."""
+
     return curvature / 2 * (x - x0) ** 2 + y0
 
 
 @dataclass(frozen=True)
 class TrapFrequencyFit:
+    """Result of a one-dimensional harmonic trap fit."""
+
     frequency_mhz: float
     parameters: np.ndarray
     covariance: np.ndarray
@@ -55,12 +43,9 @@ class TrapFrequencyFit:
 
 
 def trap_frequency_from_curvature_mhz_um2(curvature: float, mass_amu: float) -> float:
-    return (
-        np.sqrt(curvature * 1e6 * H * (1e6) ** 2 / (mass_amu * U))
-        / 1e6
-        / 2
-        / np.pi
-    )
+    """Convert quadratic curvature in MHz/um^2 into trap frequency in MHz."""
+
+    return np.sqrt(curvature * 1e6 * H * (1e6) ** 2 / (mass_amu * U)) / 1e6 / 2 / np.pi
 
 
 def fit_trap_frequency(
@@ -71,7 +56,12 @@ def fit_trap_frequency(
     y_fit_threshold_ratio: float = 0.8,
     x_bounds: tuple[float | None, float | None] = (None, None),
 ) -> TrapFrequencyFit:
-    """Fit a quadratic near a potential minimum and return the trap frequency."""
+    """Fit a quadratic near a potential minimum and return the trap frequency.
+
+    The potential must be sampled in MHz on an ``xs_um`` grid. The fit first
+    restricts to ``x_bounds`` if supplied, then fits points close to the lowest
+    sampled value.
+    """
 
     xs = np.asarray(xs_um)
     potential = np.asarray(potential_mhz)
@@ -84,7 +74,9 @@ def fit_trap_frequency(
     fit_xs = xs[selector]
     fit_ys = potential[selector]
     if fit_xs.size < 3:
-        raise ValueError("Need at least three potential samples to fit a trap frequency.")
+        raise ValueError(
+            "Need at least three potential samples to fit a trap frequency."
+        )
 
     index_min = int(np.argmin(fit_ys))
     y0 = fit_ys[index_min]
@@ -111,8 +103,6 @@ def fit_trap_frequency(
 __all__ = [
     "TrapFrequencyFit",
     "fit_trap_frequency",
-    "format_value_error",
     "quadratic_potential",
-    "sqrt_scaling",
     "trap_frequency_from_curvature_mhz_um2",
 ]

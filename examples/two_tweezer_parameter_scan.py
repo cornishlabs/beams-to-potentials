@@ -42,12 +42,16 @@ class ScanResult:
 
 X_LONG_UM = np.linspace(0, 2.0, 40)
 SCAN_LONG_WAVELENGTH_NM = 1065
+
+# The first species is initialized near the 817 tweezer. The second is
+# initialized near the scanned long-wavelength tweezer.
+SCAN_SPECIES_PAIR = ("Rb", "RbCs33")
+
 HELD_PARAMETERS = (
     HeldParameters("y=0.00 um, z=0.00 um", y_long_um=0.0, z_long_um=0.0),
     HeldParameters("y=0.1 um, z=0.00 um", y_long_um=0.1, z_long_um=0.0),
     HeldParameters("y=0.1 um, z=0.2 um", y_long_um=0.1, z_long_um=0.2),
 )
-SCAN_SPECIES_PAIR = ("Rb", "RbCs33s")
 AXIS_GRIDS = (
     np.linspace(-2, 2, 81),
     np.linspace(-2, 2, 81),
@@ -60,16 +64,20 @@ def analyze_two_tweezer_scan(
     holding: HeldParameters,
     species_pair: tuple[str, str] = SCAN_SPECIES_PAIR,
 ) -> ScanResult:
+    x_values = np.asarray(x_long_um, dtype=float)
+    if x_values.size == 0:
+        raise ValueError("x_long_um must contain at least one scan point.")
+
     separations = []
     depths = []
     frequencies = []
     minima = []
     guesses = (
         np.array((0.0, 0.0, 0.0)),
-        np.array((x_long_um[0], holding.y_long_um, holding.z_long_um)),
+        np.array((x_values[0], holding.y_long_um, holding.z_long_um)),
     )
 
-    for x_um in x_long_um:
+    for x_um in x_values:
         beams = make_two_tweezer_beams(
             power_817_mw=holding.power_817_mw,
             power_long_mw=holding.power_long_mw,
@@ -102,7 +110,7 @@ def analyze_two_tweezer_scan(
 
     return ScanResult(
         holding=holding,
-        x_long_um=np.asarray(x_long_um),
+        x_long_um=x_values,
         separation_nm=np.asarray(separations),
         depths_mhz=np.asarray(depths),
         frequencies_khz=np.asarray(frequencies),
@@ -146,9 +154,7 @@ def plot_scan_results(results: Sequence[ScanResult]) -> None:
     axs[0].set_ylabel("Separation (nm)")
     axs[1].set_ylabel("-U at minimum (MHz)")
     axs[2].set_ylabel("x trap frequency (kHz)")
-    axs[2].set_xlabel(
-        f"{SCAN_LONG_WAVELENGTH_NM} nm tweezer x-position (um)"
-    )
+    axs[2].set_xlabel(f"{SCAN_LONG_WAVELENGTH_NM} nm tweezer x-position (um)")
 
     axs[0].legend(fontsize="x-small")
     axs[1].legend(fontsize="xx-small", ncol=2)

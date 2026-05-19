@@ -43,6 +43,7 @@ M_RB = 87
 M_CS = 133
 M_RBCS = M_RB + M_CS
 
+# Edit or extend this table when new measured/calculated polarizabilities are available.
 SPECIES: dict[str, Species] = {
     "Rb": Species(
         "Rb",
@@ -93,6 +94,8 @@ SPECIES: dict[str, Species] = {
 
 
 def get_species(species: str | Species) -> Species:
+    """Return a ``Species`` object from either a name or an existing object."""
+
     if isinstance(species, Species):
         return species
     try:

@@ -29,7 +29,9 @@ class PublicApiTests(unittest.TestCase):
         beam_817 = beam_1065.with_updates(wavelength_nm=817)
 
         self.assertLess(btp.PotentialSystem([beam_1065], "Cs").potential((0, 0, 0)), 0)
-        self.assertGreater(btp.PotentialSystem([beam_817], "Cs").potential((0, 0, 0)), 0)
+        self.assertGreater(
+            btp.PotentialSystem([beam_817], "Cs").potential((0, 0, 0)), 0
+        )
 
     def test_vectorized_coordinates(self):
         beam = btp.Beam(

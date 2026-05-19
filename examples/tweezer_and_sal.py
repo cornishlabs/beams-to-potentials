@@ -15,7 +15,9 @@ SPECIES_TO_COMPARE = ("Rb", "Cs")
 COLOURS = ("blue", "red")
 
 
-def make_beams(sal_power_mw: float = 200, sal_phase_rad: float = 1.9) -> tuple[bpl.Beam, ...]:
+def make_beams(
+    sal_power_mw: float = 200, sal_phase_rad: float = 1.9
+) -> tuple[bpl.Beam, ...]:
     return (
         bpl.Beam(
             wavelength_nm=1066,
@@ -59,7 +61,9 @@ def scan_sal_phase(phase_rad: float) -> tuple[bpl.PotentialSystem, ...]:
     return systems_for_beams(make_beams(sal_phase_rad=phase_rad))
 
 
-def run_scan(values: Sequence[float], factory) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+def run_scan(
+    values: Sequence[float], factory
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     scan = bpl.scan_parameter(
         values,
         factory,
@@ -76,11 +80,20 @@ def plot_trap_analysis(analyses: Sequence[bpl.TrapAnalysis]) -> None:
     for analysis, colour in zip(analyses, COLOURS):
         for axis in analysis.axes:
             ax, ax_low = axs.T[axis.axis_index]
-            ax.plot(axis.grid_um, axis.potential_mhz, c=colour, label=analysis.system.species.name)
+            ax.plot(
+                axis.grid_um,
+                axis.potential_mhz,
+                c=colour,
+                label=analysis.system.species.name,
+            )
             ax.axvline(axis.fit.center_um, lw=1, linestyle="--", color=colour)
-            ax.axvline(analysis.minimum_um[axis.axis_index], lw=1, linestyle="-", color=colour)
+            ax.axvline(
+                analysis.minimum_um[axis.axis_index], lw=1, linestyle="-", color=colour
+            )
 
-            density_xs = np.linspace(axis.fit.center_um - 1.3, axis.fit.center_um + 1.3, 200)
+            density_xs = np.linspace(
+                axis.fit.center_um - 1.3, axis.fit.center_um + 1.3, 200
+            )
             density = bpl.harmonic_oscillator_density_um(
                 density_xs,
                 axis.fit.center_um,
@@ -125,7 +138,9 @@ def plot_potential_2d(beams: Sequence[bpl.Beam], species: str = "Cs") -> None:
     potential = system.potential((x_mesh, 0, z_mesh))
     norm = mpl.colors.Normalize(vmin=-7, vmax=+3)
 
-    contour = ax.contourf(x_mesh, z_mesh, potential, levels=1000, cmap="afmhot_r", norm=norm)
+    contour = ax.contourf(
+        x_mesh, z_mesh, potential, levels=1000, cmap="afmhot_r", norm=norm
+    )
     colorbar = fig.colorbar(contour, ax=ax)
     colorbar.set_label("Potential (MHz)")
 
@@ -144,7 +159,9 @@ def plot_scan(
     fig, axs = plt.subplots(3, 1, constrained_layout=True, sharex=True)
     for species_index, species in enumerate(SPECIES_TO_COMPARE):
         colour = COLOURS[species_index]
-        axs[0].plot(values, -potential_minima_mhz[:, species_index], label=species, color=colour)
+        axs[0].plot(
+            values, -potential_minima_mhz[:, species_index], label=species, color=colour
+        )
         for axis_index, axis_name in enumerate(bpl.AXES):
             linestyle = ["-", "--", ":"][axis_index]
             label = f"{species}, {axis_name}"

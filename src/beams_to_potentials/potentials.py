@@ -15,7 +15,9 @@ from .species import Species, get_species
 DEFAULT_MINIMUM_BOUNDS = ((-5, 5), (-5, 5), (-9, 9))
 
 
-def potential_mhz(coord: Sequence[object], beams: Iterable[Beam], species: str | Species):
+def potential_mhz(
+    coord: Sequence[object], beams: Iterable[Beam], species: str | Species
+):
     """Calculate optical potential in MHz for one species at ``coord``."""
 
     species_def = get_species(species)
@@ -60,6 +62,13 @@ def intensity_kw_cm2(coord: Sequence[object], beams: Iterable[Beam]):
 
 @dataclass(frozen=True)
 class PotentialSystem:
+    """A set of beams evaluated for one trapped species.
+
+    This is the main object used by examples. It accepts scalar coordinates or
+    NumPy arrays, so the same ``potential((x, y, z))`` call works for a single
+    point, a line cut, or a meshgrid.
+    """
+
     beams: Sequence[Beam]
     species: str | Species
 
@@ -68,12 +77,18 @@ class PotentialSystem:
         object.__setattr__(self, "species", get_species(self.species))
 
     def potential(self, coord: Sequence[object]):
+        """Optical potential in MHz at ``coord``."""
+
         return potential_mhz(coord, self.beams, self.species)
 
     def intensity(self, coord: Sequence[object]):
+        """Total optical intensity in W/m^2 at ``coord``."""
+
         return intensity_w_m2(coord, self.beams)
 
     def intensity_kw_cm2(self, coord: Sequence[object]):
+        """Total optical intensity in kW/cm^2 at ``coord``."""
+
         return intensity_kw_cm2(coord, self.beams)
 
     def find_minimum(
@@ -82,6 +97,8 @@ class PotentialSystem:
         bounds: Sequence[tuple[float, float]] = DEFAULT_MINIMUM_BOUNDS,
         epsilon: float = 0.002,
     ) -> np.ndarray:
+        """Find a local potential minimum near ``initial_guess_um``."""
+
         minimum, _, _ = fmin_tnc(
             lambda coord: self.potential(coord),
             initial_guess_um,

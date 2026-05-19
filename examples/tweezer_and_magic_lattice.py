@@ -66,11 +66,20 @@ def plot_trap_analysis(analysis: bpl.TrapAnalysis) -> None:
 
     for axis in analysis.axes:
         ax, ax_low = axs.T[axis.axis_index]
-        ax.plot(axis.grid_um, axis.potential_mhz, c="red", label=analysis.system.species.name)
+        ax.plot(
+            axis.grid_um,
+            axis.potential_mhz,
+            c="red",
+            label=analysis.system.species.name,
+        )
         ax.axvline(axis.fit.center_um, lw=1, linestyle="--", color="red")
-        ax.axvline(analysis.minimum_um[axis.axis_index], lw=1, linestyle="-", color="red")
+        ax.axvline(
+            analysis.minimum_um[axis.axis_index], lw=1, linestyle="-", color="red"
+        )
 
-        density_xs = np.linspace(axis.fit.center_um - 1.3, axis.fit.center_um + 1.3, 200)
+        density_xs = np.linspace(
+            axis.fit.center_um - 1.3, axis.fit.center_um + 1.3, 200
+        )
         density = bpl.harmonic_oscillator_density_um(
             density_xs,
             axis.fit.center_um,
@@ -123,7 +132,9 @@ def plot_potential_2d(
     potential = system.potential((x_mesh, 0, z_mesh))
     norm = mpl.colors.Normalize(vmin=vmin, vmax=vmax)
 
-    contour = ax.contourf(x_mesh, z_mesh, potential, levels=1000, cmap="afmhot_r", norm=norm)
+    contour = ax.contourf(
+        x_mesh, z_mesh, potential, levels=1000, cmap="afmhot_r", norm=norm
+    )
     colorbar = fig.colorbar(contour, ax=ax)
     colorbar.set_label("Potential (MHz)")
 
@@ -194,7 +205,9 @@ def track_tweezers(spacings_um: Sequence[float]) -> np.ndarray:
                         color="red",
                     )
                     ax_low.plot(density_xs, density, c="red", alpha=0.4)
-                    ax_low.fill_between(density_xs, density, y2=0, color="red", alpha=0.2)
+                    ax_low.fill_between(
+                        density_xs, density, y2=0, color="red", alpha=0.2
+                    )
 
         for axes in axs.T:
             axes[-1].set_xlabel("position (um)")

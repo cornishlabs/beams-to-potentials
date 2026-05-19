@@ -46,18 +46,24 @@ class Beam:
     def z0_um(self) -> float:
         return self.center_um[2]
 
-    def with_updates(self, **changes: float | str | tuple[float, float, float]) -> "Beam":
+    def with_updates(
+        self, **changes: float | str | tuple[float, float, float]
+    ) -> "Beam":
         """Return a copy of the beam with selected dataclass fields changed."""
 
         return replace(self, **changes)
 
 
 def waist_um(z_um, waist_0_um: float, wavelength_um: float):
+    """Gaussian beam waist at propagation distance ``z_um``."""
+
     z_rayleigh_um = np.pi * waist_0_um**2 / wavelength_um
     return waist_0_um * np.sqrt(1 + (z_um / z_rayleigh_um) ** 2)
 
 
 def center_intensity_w_m2(beam: Beam) -> float:
+    """Peak intensity of ``beam`` in W/m^2."""
+
     center_intensity_mw_um2 = (
         2 * beam.power_mw / (np.pi * beam.waist_x_um * beam.waist_y_um)
     )
@@ -65,6 +71,8 @@ def center_intensity_w_m2(beam: Beam) -> float:
 
 
 def center_electric_field_v_m(beam: Beam) -> float:
+    """Peak electric-field amplitude of ``beam`` in V/m."""
+
     return np.sqrt(2 * center_intensity_w_m2(beam) / (C * EPSILON_0))
 
 
@@ -79,6 +87,7 @@ def gaussian_electric_field(coord: Sequence[object], beam: Beam):
     wavelength_um = beam.wavelength_um
     electric_field_0 = center_electric_field_v_m(beam)
 
+    # ``s`` is distance along the beam axis; ``xp`` is transverse in the x-z plane.
     s = (x - beam.x0_um) * np.sin(beam.theta_rad) + (z - beam.z0_um) * np.cos(
         beam.theta_rad
     )
@@ -102,13 +111,19 @@ def gaussian_electric_field(coord: Sequence[object], beam: Beam):
 
 
 def group_beams_by_wavelength(beams: Iterable[Beam]) -> dict[int, tuple[Beam, ...]]:
+    """Group beams so same-wavelength fields can interfere coherently."""
+
     groups: dict[int, list[Beam]] = defaultdict(list)
     for beam in beams:
         groups[int(beam.wavelength_nm)].append(beam)
     return {wavelength: tuple(group) for wavelength, group in groups.items()}
 
 
-def filter_beams_by_wavelength(beams: Iterable[Beam], wavelength_nm: int) -> tuple[Beam, ...]:
+def filter_beams_by_wavelength(
+    beams: Iterable[Beam], wavelength_nm: int
+) -> tuple[Beam, ...]:
+    """Return only beams at one wavelength."""
+
     return tuple(beam for beam in beams if beam.wavelength_nm == wavelength_nm)
 
 

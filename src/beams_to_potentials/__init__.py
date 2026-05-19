@@ -1,3 +1,10 @@
+"""Small public API for optical tweezer potential calculations.
+
+Most scripts should only need ``Beam``, ``PotentialSystem``, and the analysis
+helpers re-exported here. Lower-level implementation details live in the
+submodules, but are intentionally not part of the top-level namespace.
+"""
+
 from .analysis import (
     AXES,
     AxisTrapAnalysis,
@@ -5,57 +12,27 @@ from .analysis import (
     TrapAnalysis,
     analyze_trap,
     axis_slice,
-    default_axis_grids,
     distance_nm,
     distance_um,
-    fit_axis_trap,
     harmonic_length_um,
     harmonic_oscillator_density_um,
     scan_arrays,
     scan_parameter,
     trap_frequencies,
 )
-from .beams import (
-    Beam,
-    center_electric_field_v_m,
-    center_intensity_w_m2,
-    filter_beams_by_wavelength,
-    gaussian_electric_field,
-    group_beams_by_wavelength,
-    waist_um,
-)
-from .constants import A0, C, EPSILON_0, H, HBAR, K_B, U
+from .beams import Beam, filter_beams_by_wavelength
 from .fitting import (
     TrapFrequencyFit,
     fit_trap_frequency,
-    format_value_error,
     quadratic_potential,
-    sqrt_scaling,
     trap_frequency_from_curvature_mhz_um2,
 )
-from .potentials import (
-    DEFAULT_MINIMUM_BOUNDS,
-    PotentialSystem,
-    intensity_kw_cm2,
-    intensity_w_m2,
-    potential_mhz,
-)
-from .species import M_CS, M_RB, M_RBCS, SPECIES, Species, get_species
+from .potentials import PotentialSystem
+from .species import SPECIES, Species, get_species
 
 __all__ = [
-    "A0",
     "AXES",
-    "C",
-    "DEFAULT_MINIMUM_BOUNDS",
-    "EPSILON_0",
-    "H",
-    "HBAR",
-    "K_B",
-    "M_CS",
-    "M_RB",
-    "M_RBCS",
     "SPECIES",
-    "U",
     "AxisTrapAnalysis",
     "Beam",
     "PotentialSystem",
@@ -65,28 +42,16 @@ __all__ = [
     "TrapFrequencyFit",
     "analyze_trap",
     "axis_slice",
-    "center_electric_field_v_m",
-    "center_intensity_w_m2",
-    "default_axis_grids",
     "distance_nm",
     "distance_um",
     "filter_beams_by_wavelength",
-    "fit_axis_trap",
     "fit_trap_frequency",
-    "format_value_error",
-    "gaussian_electric_field",
     "get_species",
-    "group_beams_by_wavelength",
     "harmonic_length_um",
     "harmonic_oscillator_density_um",
-    "intensity_kw_cm2",
-    "intensity_w_m2",
-    "potential_mhz",
     "quadratic_potential",
     "scan_arrays",
     "scan_parameter",
-    "sqrt_scaling",
     "trap_frequencies",
     "trap_frequency_from_curvature_mhz_um2",
-    "waist_um",
 ]

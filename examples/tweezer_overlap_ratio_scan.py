@@ -6,7 +6,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 import beams_to_potentials as bpl
-from example_systems import DEFAULT_SPECIES_PAIR, find_pair_minima, make_two_tweezer_beams
+from example_systems import (
+    DEFAULT_SPECIES_PAIR,
+    find_pair_minima,
+    make_two_tweezer_beams,
+)
 
 
 POWER_817_MW = 0.25

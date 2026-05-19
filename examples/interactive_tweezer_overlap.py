@@ -138,7 +138,9 @@ def plot_axis_potential(
         partial = system.with_beams(beams).potential(coord)
         ax.plot(grid, partial, color=line_colour, linestyle="--", label=wavelength_nm)
 
-    ax.axvline(centre_um[axis_index], color="black", linestyle="--", linewidth=1, alpha=0.5)
+    ax.axvline(
+        centre_um[axis_index], color="black", linestyle="--", linewidth=1, alpha=0.5
+    )
     ax.set_xlabel(f"{bpl.AXES[axis_index]} distance from 817 centre (um)")
     ax.set_ylabel(f"{system.species.name} potential (MHz)")
 
@@ -163,7 +165,12 @@ def plot_axis_potential(
         return None, None
 
     fit_xs = np.linspace(fit.center_um - 0.6, fit.center_um + 0.6, 200)
-    ax.plot(fit_xs, bpl.quadratic_potential(fit_xs, *fit.parameters), color="red", linewidth=1)
+    ax.plot(
+        fit_xs,
+        bpl.quadratic_potential(fit_xs, *fit.parameters),
+        color="red",
+        linewidth=1,
+    )
     ax.axvline(fit.center_um, color="red", linestyle="--", linewidth=1)
 
     overlay_xs = np.linspace(fit.center_um - 1.3, fit.center_um + 1.3, 200)
@@ -175,7 +182,9 @@ def plot_axis_potential(
         potential_span = np.nanmax(total) - np.nanmin(total)
         overlay = fit.offset_mhz + density / density_scale * 0.15 * potential_span
         ax.plot(overlay_xs, overlay, color="black", alpha=0.25)
-        ax.fill_between(overlay_xs, overlay, y2=fit.offset_mhz, color="black", alpha=0.08)
+        ax.fill_between(
+            overlay_xs, overlay, y2=fit.offset_mhz, color="black", alpha=0.08
+        )
 
     fitted_point_um = bpl.axis_slice(centre_um, axis_index, fit.center_um)
     total_intensity_kw_cm2 = system.intensity_kw_cm2(fitted_point_um)
@@ -329,7 +338,9 @@ def run_interactive() -> None:
         minima = find_minima(beams, species_pair, second_guess)
         fit_centres = []
 
-        for column, (system, centre, colour) in enumerate(zip(systems, minima, colours)):
+        for column, (system, centre, colour) in enumerate(
+            zip(systems, minima, colours)
+        ):
             atom_fit_centres = []
             for axis_index in range(3):
                 fit_centre, _trap_frequency = plot_axis_potential(

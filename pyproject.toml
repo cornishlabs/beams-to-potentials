@@ -1,16 +1,13 @@
 [project]
 name = "beams-to-potentials"
 version = "0.1.0"
-description = "Add your description here"
+description = "Calculate optical potentials and trap properties from Gaussian beams"
 readme = "README.md"
-authors = [
-    { name = "tomhepz", email = "9285131+tomhepz@users.noreply.github.com>" }
-]
+authors = [{ name = "tomhepz", email = "9285131+tomhepz@users.noreply.github.com" }]
 requires-python = ">=3.14"
 dependencies = [
     "matplotlib>=3.10.9",
     "numpy>=2.4.6",
-    "pandas>=3.0.3",
     "scipy>=1.17.1",
 ]
 

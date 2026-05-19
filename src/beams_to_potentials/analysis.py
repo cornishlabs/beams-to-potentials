@@ -16,6 +16,8 @@ AXES = ("x", "y", "z")
 
 @dataclass(frozen=True)
 class AxisTrapAnalysis:
+    """Line cut and quadratic fit for one Cartesian axis."""
+
     axis: str
     axis_index: int
     grid_um: np.ndarray
@@ -25,6 +27,8 @@ class AxisTrapAnalysis:
 
 @dataclass(frozen=True)
 class TrapAnalysis:
+    """Minimum, trap depth, and fitted frequencies for a system."""
+
     system: PotentialSystem
     minimum_um: np.ndarray
     potential_minimum_mhz: float
@@ -54,11 +58,15 @@ class TrapAnalysis:
 
 @dataclass(frozen=True)
 class ScanPoint:
+    """Analysis results for one value in a parameter scan."""
+
     value: float
     analyses: tuple[TrapAnalysis, ...]
 
 
 def default_axis_grids() -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Default line-cut grids used for x, y, and z trap fits."""
+
     return (
         np.linspace(-4, 4, 200),
         np.linspace(-2, 2, 42),
@@ -69,8 +77,11 @@ def default_axis_grids() -> tuple[np.ndarray, np.ndarray, np.ndarray]:
 def axis_slice(
     centre_um: Sequence[float], axis_index: int, axis_values_um: Sequence[float]
 ) -> tuple[object, object, object]:
+    """Coordinates for a one-dimensional cut through ``centre_um``."""
+
     return tuple(
-        centre_um[index] if index != axis_index else axis_values_um for index in range(3)
+        centre_um[index] if index != axis_index else axis_values_um
+        for index in range(3)
     )
 
 
@@ -83,6 +94,8 @@ def fit_axis_trap(
     fit_bounds_radius_um: float = 0.3,
     y_fit_threshold_ratio: float = 0.8,
 ) -> AxisTrapAnalysis:
+    """Fit the potential along one axis through ``centre_um``."""
+
     grid = np.asarray(axis_values_um)
     potential = system.potential(axis_slice(centre_um, axis_index, grid))
     fit = fit_trap_frequency(
@@ -107,6 +120,8 @@ def trap_frequencies(
     fit_bounds_radius_um: float = 0.3,
     y_fit_threshold_ratio: float = 0.8,
 ) -> dict[str, TrapFrequencyFit]:
+    """Return fitted trap frequencies for x, y, and z line cuts."""
+
     grids = axis_grids if axis_grids is not None else default_axis_grids()
     return {
         AXES[index]: fit_axis_trap(
@@ -131,6 +146,8 @@ def analyze_trap(
     fit_bounds_radius_um: float = 0.3,
     y_fit_threshold_ratio: float = 0.8,
 ) -> TrapAnalysis:
+    """Find or use a minimum, then fit trap frequencies along each axis."""
+
     if minimum_um is None:
         if initial_guess_um is None:
             raise ValueError("Provide either initial_guess_um or minimum_um.")
@@ -160,6 +177,13 @@ def scan_parameter(
     initial_guesses_um: Sequence[Sequence[float]] | None = None,
     **analysis_kwargs,
 ) -> tuple[ScanPoint, ...]:
+    """Run ``analyze_trap`` for each value produced by ``system_factory``.
+
+    ``system_factory`` should return one or more ``PotentialSystem`` objects for
+    the supplied scan value. This keeps scan scripts short while leaving the
+    physical setup in ordinary Python code.
+    """
+
     points = []
     for value in values:
         systems = tuple(system_factory(value))
@@ -179,8 +203,13 @@ def scan_parameter(
 
 
 def scan_arrays(scan: Sequence[ScanPoint]) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Convert scan results into arrays convenient for plotting."""
+
     potential_minima_mhz = np.array(
-        [[analysis.potential_minimum_mhz for analysis in point.analyses] for point in scan]
+        [
+            [analysis.potential_minimum_mhz for analysis in point.analyses]
+            for point in scan
+        ]
     )
     fit_centres_um = np.array(
         [[analysis.fit_centres_um for analysis in point.analyses] for point in scan]
@@ -202,6 +231,8 @@ def distance_nm(point_a: Sequence[float], point_b: Sequence[float]) -> float:
 def harmonic_length_um(
     trap_frequency_mhz: float, mass_amu: float, sigma_scale: float = 3
 ) -> float:
+    """Return ``sigma_scale`` harmonic-oscillator widths in um."""
+
     omega = 2 * np.pi * trap_frequency_mhz * 1e6
     sigma_m = np.sqrt(HBAR / (mass_amu * U * omega))
     return sigma_scale * sigma_m * 1e6
@@ -213,18 +244,14 @@ def harmonic_oscillator_density_um(
     trap_frequency_mhz: float,
     mass_amu: float,
 ) -> np.ndarray:
+    """One-dimensional harmonic oscillator probability density in um^-1."""
+
     xs = np.asarray(xs_um)
     omega = 2 * np.pi * trap_frequency_mhz * 1e6
-    wavefunction = (mass_amu * U * omega / (np.pi * HBAR)) ** 0.25
-    wavefunction *= np.exp(
-        -(
-            mass_amu
-            * U
-            * omega
-            * ((xs - centre_um) * 1e-6) ** 2
-        )
-        / (2 * HBAR)
-    )
+    mass_kg = mass_amu * U
+    displacement_m = (xs - centre_um) * 1e-6
+    wavefunction = (mass_kg * omega / (np.pi * HBAR)) ** 0.25
+    wavefunction *= np.exp(-(mass_kg * omega * displacement_m**2) / (2 * HBAR))
     return wavefunction**2 * 1e-6
 
 
