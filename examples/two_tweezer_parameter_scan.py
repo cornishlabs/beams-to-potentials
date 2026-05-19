@@ -47,7 +47,7 @@ HELD_PARAMETERS = (
     HeldParameters("y=0.1 um, z=0.00 um", y_long_um=0.1, z_long_um=0.0),
     HeldParameters("y=0.1 um, z=0.2 um", y_long_um=0.1, z_long_um=0.2),
 )
-SCAN_SPECIES_PAIR = ("Rb", "RbCs33")
+SCAN_SPECIES_PAIR = ("Rb", "RbCs33s")
 AXIS_GRIDS = (
     np.linspace(-2, 2, 81),
     np.linspace(-2, 2, 81),
