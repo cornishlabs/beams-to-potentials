@@ -89,7 +89,9 @@ def find_minima(
     species_pair: tuple[str, str],
     second_guess: tuple[float, float, float],
 ) -> tuple[np.ndarray, np.ndarray]:
-    first_min = bpl.my_find_potential_minimum((0.0, 0.0, 0.0), tweezers, species_pair[0])
+    first_min = bpl.my_find_potential_minimum(
+        (0.0, 0.0, 0.0), tweezers, species_pair[0]
+    )
     second_min = bpl.my_find_potential_minimum(second_guess, tweezers, species_pair[1])
     return first_min, second_min
 
@@ -113,7 +115,9 @@ def harmonic_density_overlay(
         return xs, np.full_like(xs, centre_potential_mhz), centre_potential_mhz
 
     potential_span = np.nanmax(potential) - np.nanmin(potential)
-    overlay = centre_potential_mhz + density_per_um / density_scale * 0.15 * potential_span
+    overlay = (
+        centre_potential_mhz + density_per_um / density_scale * 0.15 * potential_span
+    )
     return xs, overlay, centre_potential_mhz
 
 
@@ -134,13 +138,19 @@ def plot_axis_potential(
     axis_slice = tuple(centre[d] if d != axis_index else axis_grid for d in range(3))
 
     total = bpl.total_potential(axis_slice, tweezers, atom)
-    potential_817 = bpl.total_potential(axis_slice, only_wavelength(tweezers, 817), atom)
-    potential_1065 = bpl.total_potential(axis_slice, only_wavelength(tweezers, 1065), atom)
+    potential_817 = bpl.total_potential(
+        axis_slice, only_wavelength(tweezers, 817), atom
+    )
+    potential_1065 = bpl.total_potential(
+        axis_slice, only_wavelength(tweezers, 1065), atom
+    )
 
     ax.plot(axis_grid, total, color=colour, label="total")
     ax.plot(axis_grid, potential_817, color="purple", linestyle="--", label="817")
     ax.plot(axis_grid, potential_1065, color="green", linestyle="--", label="1065")
-    ax.axvline(centre[axis_index], color="black", linestyle="--", linewidth=1, alpha=0.5)
+    ax.axvline(
+        centre[axis_index], color="black", linestyle="--", linewidth=1, alpha=0.5
+    )
     ax.set_xlabel(f"{AXES[axis_index]} distance from 817 centre ($\\mu$m)")
     ax.set_ylabel(f"{atom} potential (MHz)")
 
@@ -268,7 +278,9 @@ def run_interactive(mode: str = "atom-atom") -> None:
         minima = find_minima(tweezers, species_pair, second_guess)
         fit_centres = []
 
-        for column, (atom, centre, colour) in enumerate(zip(species_pair, minima, colours)):
+        for column, (atom, centre, colour) in enumerate(
+            zip(species_pair, minima, colours)
+        ):
             axs[0, column].text(
                 0.5,
                 0.5,
