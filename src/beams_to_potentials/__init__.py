@@ -20,14 +20,19 @@ from .analysis import (
     scan_parameter,
     trap_frequencies,
 )
-from .beams import Beam, filter_beams_by_wavelength
+from .beams import (
+    Beam,
+    filter_beams_by_wavelength,
+    rayleigh_range_um,
+    rayleigh_ranges_um,
+)
 from .fitting import (
     TrapFrequencyFit,
     fit_trap_frequency,
     quadratic_potential,
     trap_frequency_from_curvature_mhz_um2,
 )
-from .potentials import PotentialSystem
+from .potentials import PotentialSystem, mhz_to_mk
 from .species import SPECIES, Species, get_species
 
 __all__ = [
@@ -49,7 +54,10 @@ __all__ = [
     "get_species",
     "harmonic_length_um",
     "harmonic_oscillator_density_um",
+    "mhz_to_mk",
     "quadratic_potential",
+    "rayleigh_range_um",
+    "rayleigh_ranges_um",
     "scan_arrays",
     "scan_parameter",
     "trap_frequencies",

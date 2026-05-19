@@ -9,7 +9,7 @@ import numpy as np
 from scipy.optimize import fmin_tnc
 
 from .beams import Beam, gaussian_electric_field, group_beams_by_wavelength
-from .constants import A0, C, EPSILON_0, H
+from .constants import A0, C, EPSILON_0, H, K_B
 from .species import Species, get_species
 
 DEFAULT_MINIMUM_BOUNDS = ((-5, 5), (-5, 5), (-9, 9))
@@ -58,6 +58,12 @@ def intensity_kw_cm2(coord: Sequence[object], beams: Iterable[Beam]):
     """Calculate total optical intensity in kW/cm^2 at ``coord``."""
 
     return intensity_w_m2(coord, beams) / 1e7
+
+
+def mhz_to_mk(frequency_mhz):
+    """Convert h times a frequency in MHz to temperature in mK."""
+
+    return frequency_mhz * 1e6 * H / K_B * 1e3
 
 
 @dataclass(frozen=True)
@@ -131,5 +137,6 @@ __all__ = [
     "PotentialSystem",
     "intensity_kw_cm2",
     "intensity_w_m2",
+    "mhz_to_mk",
     "potential_mhz",
 ]

@@ -20,6 +20,64 @@ DEFAULT_SPECIES_PAIR = ("Rb", "Cs")
 DEFAULT_POWER_817_MW = 2.5 * 0.78 * 0.6177 / 8
 DEFAULT_POWER_LONG_MW = 30 * 0.43 / 9
 
+LAB_BEAM_TEMPLATES = {
+    "817-tweezer": bpl.Beam(
+        wavelength_nm=817,
+        waist_x_um=0.885,
+        waist_y_um=0.985,
+        waist_z_um=0.995,
+        power_mw=1.0,
+        label="817 tweezer",
+    ),
+    "1065-tweezer": bpl.Beam(
+        wavelength_nm=1065,
+        waist_x_um=1.05,
+        waist_y_um=1.16,
+        waist_z_um=1.19,
+        power_mw=1.0,
+        label="1065 tweezer",
+    ),
+    "1066-tweezer": bpl.Beam(
+        wavelength_nm=1066,
+        waist_x_um=1.05,
+        waist_y_um=1.16,
+        waist_z_um=1.19,
+        power_mw=1.0,
+        label="1066 tweezer",
+    ),
+    "1145-tweezer": bpl.Beam(
+        wavelength_nm=1145,
+        waist_x_um=1.7,
+        waist_y_um=1.7,
+        waist_z_um=1.7,
+        power_mw=1.0,
+        label="1145 tweezer",
+    ),
+    "1145-lattice": bpl.Beam(
+        wavelength_nm=1145,
+        waist_x_um=100,
+        waist_y_um=40,
+        waist_z_um=60,
+        power_mw=1.0,
+        theta_rad=np.pi / 2,
+        label="1145 lattice beam",
+    ),
+}
+
+
+def make_lab_beam(name: str, power_mw: float | None = None) -> bpl.Beam:
+    """Return a named lab beam, optionally with a new power."""
+
+    try:
+        beam = LAB_BEAM_TEMPLATES[name]
+    except KeyError as exc:
+        choices = ", ".join(sorted(LAB_BEAM_TEMPLATES))
+        raise KeyError(f"Unknown lab beam {name!r}. Available: {choices}.") from exc
+
+    if power_mw is None:
+        return beam
+    return beam.with_updates(power_mw=power_mw)
+
 
 def species_options_for_wavelengths(wavelengths_nm: Sequence[int]) -> tuple[str, ...]:
     """Species with polarizabilities for every requested wavelength."""

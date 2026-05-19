@@ -20,6 +20,7 @@ What it does
 - Calculates scalar optical potentials in MHz for a chosen species.
 - Finds local minima by numerical optimization.
 - Fits harmonic trap frequencies along `x`, `y`, and `z`.
+- Converts trap depths between MHz and mK.
 - Provides helpers for common parameter scans.
 - Includes examples for interactive tweezer overlap, fixed-ratio scans, a
   two-tweezer parameter scan, a tweezer plus SAL, and an RbCs magic-lattice
@@ -39,6 +40,7 @@ The public API uses explicit unit suffixes in field names:
 | `theta_rad`, `phase_rad` | radians |
 | `PotentialSystem.potential(...)` | MHz |
 | `PotentialSystem.intensity_kw_cm2(...)` | kW/cm^2 |
+| `mhz_to_mk(...)` | mK |
 
 Installation with uv
 --------------------
@@ -150,6 +152,18 @@ species choices for a particular experiment.
 Examples
 --------
 
+Simple one-beam summary:
+
+```powershell
+uv run python examples\single_beam_summary.py 1065-tweezer --species Cs --power-mw 4.4
+```
+
+List the named lab beams available to that example:
+
+```powershell
+uv run python examples\single_beam_summary.py --list
+```
+
 Interactive two-tweezer overlap:
 
 ```powershell
@@ -216,6 +230,8 @@ The intended public API is intentionally small:
 - `analyze_trap`
 - `scan_parameter`
 - `scan_arrays`
+- `mhz_to_mk`
+- `rayleigh_ranges_um`
 - `distance_um` / `distance_nm`
 - `fit_trap_frequency`
 

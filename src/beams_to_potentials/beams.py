@@ -57,8 +57,24 @@ class Beam:
 def waist_um(z_um, waist_0_um: float, wavelength_um: float):
     """Gaussian beam waist at propagation distance ``z_um``."""
 
-    z_rayleigh_um = np.pi * waist_0_um**2 / wavelength_um
+    z_rayleigh_um = rayleigh_range_um(waist_0_um, wavelength_um)
     return waist_0_um * np.sqrt(1 + (z_um / z_rayleigh_um) ** 2)
+
+
+def rayleigh_range_um(waist_0_um: float, wavelength_um: float) -> float:
+    """Rayleigh range in um for a waist and wavelength given in um."""
+
+    return float(np.pi * waist_0_um**2 / wavelength_um)
+
+
+def rayleigh_ranges_um(beam: Beam) -> tuple[float, float, float]:
+    """Rayleigh ranges for ``beam`` from its x, y, and z waists."""
+
+    return (
+        rayleigh_range_um(beam.waist_x_um, beam.wavelength_um),
+        rayleigh_range_um(beam.waist_y_um, beam.wavelength_um),
+        rayleigh_range_um(beam.waist_z_um, beam.wavelength_um),
+    )
 
 
 def center_intensity_w_m2(beam: Beam) -> float:
@@ -134,5 +150,7 @@ __all__ = [
     "filter_beams_by_wavelength",
     "gaussian_electric_field",
     "group_beams_by_wavelength",
+    "rayleigh_range_um",
+    "rayleigh_ranges_um",
     "waist_um",
 ]

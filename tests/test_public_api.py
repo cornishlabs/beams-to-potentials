@@ -96,6 +96,21 @@ class PublicApiTests(unittest.TestCase):
         self.assertAlmostEqual(fit.center_um, 0.15, places=6)
         self.assertAlmostEqual(fit.frequency_mhz, expected, places=9)
 
+    def test_lab_unit_helpers(self):
+        beam = btp.Beam(
+            wavelength_nm=1000,
+            waist_x_um=1,
+            waist_y_um=2,
+            waist_z_um=3,
+            power_mw=1,
+        )
+
+        np.testing.assert_allclose(
+            btp.rayleigh_ranges_um(beam),
+            (np.pi, 4 * np.pi, 9 * np.pi),
+        )
+        self.assertGreater(btp.mhz_to_mk(1), 0)
+
 
 if __name__ == "__main__":
     unittest.main()
