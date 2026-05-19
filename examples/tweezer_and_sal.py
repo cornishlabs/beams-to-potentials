@@ -8,7 +8,7 @@ from scipy.optimize import curve_fit
 from copy import deepcopy
 import scipy.constants
 
-import beamsToPotentialsLib as bpl
+import beams_to_potentials as bpl
 
 epsilon_0 = scipy.constants.epsilon_0
 c = scipy.constants.c
@@ -207,8 +207,8 @@ cfa = ax.contourf(x_mesh,y_mesh,pot_mesh,levels=1000, cmap='afmhot_r', norm=norm
 cb = fig.colorbar(cfa, ax=ax)
 cb.set_label('Potential (MHz)')
 
-ax.set_xlabel('$x_{\mathrm{Twe}}$ (um)')
-ax.set_ylabel('$z_{\mathrm{Twe}}$ (um)')
+ax.set_xlabel(r'$x_{\mathrm{Twe}}$ (um)')
+ax.set_ylabel(r'$z_{\mathrm{Twe}}$ (um)')
 
 # ellipse = mpl.patches.Ellipse(xy=(fit_mins[0][0],fit_mins[0][2]),
 #                               width=bare_length_scales_rbcs[0], height=bare_length_scales_rbcs[2], 

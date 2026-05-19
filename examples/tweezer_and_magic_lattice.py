@@ -11,20 +11,7 @@ import scipy.constants
 from scipy.interpolate import interp1d
 from math import floor, log10
 
-def sqrt(x,a):
-    return a*x**(1/2)
-
-
-def get_valerr_string(val,err):
-    prec = floor(log10(err))
-    err = round(err/10**prec)*10**prec
-    val = round(val/10**prec)*10**prec
-    if prec > 0:
-        valerr = '{:.0f}({:.0f})'.format(val,err)
-    else:
-        valerr = '{:.{prec}f}({:.0f})'.format(val,err*10**-prec,prec=-prec)
-    return valerr
-
+import beams_to_potentials as bpl
 
 epsilon_0 = scipy.constants.epsilon_0
 c = scipy.constants.c
@@ -32,134 +19,6 @@ a0 = scipy.constants.physical_constants['Bohr radius'][0]
 k_B = scipy.constants.Boltzmann
 h = scipy.constants.h
 u = scipy.constants.u
-
-m_rb = 87
-m_cs = 133
-m_rbcs = m_rb+m_cs
-
-species = {
-    'Rb':{
-        'm': m_rb,
-        'pols': {},
-    },
-    'Cs':{
-        'm': m_rb,
-        'pols': {},
-    },
-    'RbCs': {
-        'm': m_rbcs,
-        'pols': {
-            1145: 754,
-        },
-    },
-}
-
-def waist(z,w0,wavelength):
-    zR = np.pi*w0**2/wavelength
-    return w0*np.sqrt(1+(z/zR)**2)
-
-def E_gaussian_3d_rotated(x, y, z, x0, y0, z0, theta, wx0, wy0, wz0, E0, wavelength):
-    # Beam propagation coordinate along the beam axis
-    s = (x - x0) * np.sin(theta) + (z - z0) * np.cos(theta)
-    # Transverse coordinate in the x-z plane
-    xp = (x - x0) * np.cos(theta) - (z - z0) * np.sin(theta)
-    
-    # Compute the beam waists as functions of s
-    zR = np.pi*wz0**2/wavelength
-    wx = waist(s, wx0, wavelength)
-    wy = waist(s, wy0, wavelength)
-    wz = waist(s, wz0, wavelength)
-    
-    k = (2*np.pi/((wavelength)))
-    Rs = np.maximum(s*(1+(zR/np.maximum(s,0.01))**2),0.01)
-    return E0 * np.exp(- xp**2 / wx**2) * np.exp(- (y - y0)**2 / wy**2) * (wz0 / wz) * np.exp(-1j*(k*(s)))#+k*((xp)**2/(2*(Rs)))))#-np.arctan(np.maximum(s,0.01)/zR)))
-
-def total_potential(coord,tweezers,atom):
-    x = coord[0]
-    y = coord[1]
-    z = coord[2]
-    potential=0
-    for tag, params_arr in deepcopy(tweezers).items():
-        wavelength = float(tag[0])/1e3
-        E = 0+0j
-        for params in params_arr:
-            center_intensity_mW_um2 = 2*params['power_mW']/(np.pi*params['wx0']*params['wy0'])
-            center_intensity_W_m2 = (center_intensity_mW_um2/1e3)*(1e6)**2
-            center_E_field_V_per_m = np.sqrt(2*center_intensity_W_m2/(c*epsilon_0))
-            
-            E += E_gaussian_3d_rotated(x,y,z,
-                                    params['x0'],params['y0'],params['z0'],
-                                    params['theta'],
-                                    params['wx0'],params['wy0'],params['wz0'],
-                                    center_E_field_V_per_m,wavelength)*np.exp(-1j*params['phase'])
-        intensity = (1/2) * c * epsilon_0 * np.abs(E)**2
-    
-        polarisability_au = species[atom]['pols'][tag[0]]
-        polarisability_si = polarisability_au*4*np.pi*epsilon_0*a0**3
-
-        trap_depth_J = (polarisability_si/(2*c*epsilon_0)) * intensity
-        trap_depth_MHz = trap_depth_J/h/1e6
-        potential += -trap_depth_MHz
-
-    return potential
-
-def quad(x,x0,a,y0):
-    return a/2*(x-x0)**2 + y0
-
-def my_find_potential_minimum(min_guess,tweezers,atom):
-    # xtol = 0.000001
-    # ftol = 0.000001
-    minr, _,_ = fmin_tnc(
-                    total_potential,
-                    min_guess,
-                    args=(tweezers,atom),
-                    approx_grad=True,
-                    bounds=[(-5,5),(-5,5),(-9,9)],
-                    epsilon = 0.002,
-                    disp=False
-    )
-    return minr
-
-def my_get_trap_frequency(xs,potential,
-                          mass,
-                          x_fit_threshold_um=1,y_fit_threshold_ratio=0.8,
-                          x_bounds=(None,None),
-                          plot=False):
-    """Fits a quadratic to the minimum of a potential to find a trap frequency."""
-    mass_si = mass*u
-    
-    df = pd.DataFrame()
-    selector = np.full_like(xs,True,dtype=bool)
-    if x_bounds[0] is not None:
-        selector = selector*(xs > x_bounds[0])
-    if x_bounds[1] is not None:
-        selector = selector*(xs < x_bounds[1])
-    df['x'] = xs[selector]
-    df['y'] = potential[selector]
-    
-    idxmin = df['y'].idxmin()
-    y0 = df['y'][idxmin]
-    x0 = df['x'][idxmin]
-
-    df_turn = df[(np.abs(df['x'] - x0) < x_fit_threshold_um)]
-    df_turn = df_turn[(df_turn['y'] < y_fit_threshold_ratio * y0)]
-    
-    # fix_quad = lambda x,a : quad(x,x0,a,y0)
-    # print(df_turn)
-    popt,pcov = curve_fit(quad,df_turn['x'],df_turn['y'],p0=[x0,0.2,y0])#,p0=[0])
-    
-    trap_frequency_MHz = np.sqrt(popt[1]*1e6*h*(1e6)**2/mass_si)/1e6/2/np.pi # k is in MHz/um**2
-    
-    if plot:
-        plt.plot(xs,potential,c='blue',linestyle='-')
-        ylim = plt.gca().get_ylim()
-        plt.plot(xs, quad(xs,*popt),c='red',linestyle='--')
-        plt.ylabel('potential (MHz)')
-        plt.xlabel('distance (um)')
-        plt.ylim(ylim)
-        plt.show()
-    
-    return trap_frequency_MHz, popt
 
 p_imp=7
 tweezer_params_base_rbcs = {
@@ -222,14 +81,14 @@ tweezer_params_rbcs[(1145,"beams")][1]['power_mW']=0
 
 # start_positions = [(-2,0,0),(2,0,0)]
 
-rbcs_min = my_find_potential_minimum((-0.143,0,-5.5),tweezer_params_rbcs,"RbCs")
+rbcs_min = bpl.my_find_potential_minimum((-0.143,0,-5.5),tweezer_params_rbcs,"RbCs")
 bare_trap_freqs_khz_rbcs = []
 bare_length_scales_rbcs = []
 
 fit_it=True
 fit_mins = [[0,0,0]] # Will change
 atom = "RbCs"
-mass = species[atom]['m']
+mass = bpl.species[atom]['m']
 col = 'red'
 colour = 'blue'
 tweezer_params = tweezer_params_rbcs
@@ -247,7 +106,7 @@ for ci,ax_pair in enumerate(axs.T):
     
     xs = axis_var
     
-    tp = total_potential(axis_slice, tweezer_params, atom)
+    tp = bpl.total_potential(axis_slice, tweezer_params, atom)
 
     xyzaxis = ["x","y","z"][ci]
     ys = tp
@@ -258,13 +117,13 @@ for ci,ax_pair in enumerate(axs.T):
     fit_threshold_um = 0.5
     fit_y_ratio = 0.8
 
-    trap_freq, quad_popt = my_get_trap_frequency(xs,ys, mass,
+    trap_freq, quad_popt = bpl.my_get_trap_frequency(xs,ys, mass,
                                                     x_fit_threshold_um=fit_threshold_um,y_fit_threshold_ratio=fit_y_ratio,
                                                     x_bounds=(rbcs_min[ci]-0.3,rbcs_min[ci]+0.3))
     centre_position_um = quad_popt[0]
     centre_intensity_min = quad_popt[2]
     xs_fit = np.linspace(centre_position_um-fit_threshold_um,centre_position_um+fit_threshold_um,200)
-    ys_fit = quad(xs_fit, *quad_popt)
+    ys_fit = bpl.quad(xs_fit, *quad_popt)
     min_y_fit = np.min(ys_fit)
     # line_fit = ax.plot(xs_fit, ys_fit, lw=1, linestyle='-', c='red')
     fit_mins[0][ci] = centre_position_um
@@ -320,15 +179,15 @@ z = np.linspace(-20,20,200)
 
 x_mesh,y_mesh = np.meshgrid(x,z,indexing='ij')
 
-pot_mesh = total_potential((x_mesh,0,y_mesh),tweezer_params_rbcs,atom)
+pot_mesh = bpl.total_potential((x_mesh,0,y_mesh),tweezer_params_rbcs,atom)
 norm = mpl.colors.Normalize(vmin=-2.5, vmax=0)
 
 cfa = ax.contourf(x_mesh,y_mesh,pot_mesh,levels=1000, cmap='afmhot_r', norm=norm)
 cb = fig.colorbar(cfa, ax=ax)
 cb.set_label('Potential (MHz)')
 
-ax.set_xlabel('$x_{\mathrm{Twe}}$ (um)')
-ax.set_ylabel('$z_{\mathrm{Twe}}$ (um)')
+ax.set_xlabel(r'$x_{\mathrm{Twe}}$ (um)')
+ax.set_ylabel(r'$z_{\mathrm{Twe}}$ (um)')
 
 ellipse = mpl.patches.Ellipse(xy=(fit_mins[0][0],fit_mins[0][2]),
                               width=bare_length_scales_rbcs[0], height=bare_length_scales_rbcs[2], 
@@ -367,7 +226,7 @@ for sfzi, spacing_from_zero in enumerate(spacing_from_zeros):
 
     x_mesh,y_mesh = np.meshgrid(x,z,indexing='ij')
 
-    pot_mesh = total_potential((x_mesh,0,y_mesh),tweezer_params_rbcs,atom)
+    pot_mesh = bpl.total_potential((x_mesh,0,y_mesh),tweezer_params_rbcs,atom)
     norm = mpl.colors.Normalize(vmin=-3.8, vmax=0)
 
     cfa = ax_2d.contourf(x_mesh,y_mesh,pot_mesh,levels=1000, cmap='afmhot_r', norm=norm)
@@ -375,20 +234,20 @@ for sfzi, spacing_from_zero in enumerate(spacing_from_zeros):
     # cb.set_clim(vmin=-3.8, vmax=0)
     cb.set_label('Potential (MHz)')
 
-    ax_2d.set_xlabel('$x_{\mathrm{Twe}}$ (um)')
-    ax_2d.set_ylabel('$z_{\mathrm{Twe}}$ (um)')
+    ax_2d.set_xlabel(r'$x_{\mathrm{Twe}}$ (um)')
+    ax_2d.set_ylabel(r'$z_{\mathrm{Twe}}$ (um)')
     ########
 
     fig,axs = plt.subplots(2,3,height_ratios=(4,1),sharey='row',sharex='none')
     for si in range(n_copies):
-        rbcs_min = my_find_potential_minimum(previous_position[si],tweezer_params_rbcs,"RbCs")
+        rbcs_min = bpl.my_find_potential_minimum(previous_position[si],tweezer_params_rbcs,"RbCs")
         bare_trap_freqs_khz_rbcs = []
         bare_length_scales_rbcs = []
 
         fit_it=True
         fit_mins = [[0,0,0]] # Will change
         atom = "RbCs"
-        mass = species[atom]['m']
+        mass = bpl.species[atom]['m']
         col = 'red'
         tweezer_params = tweezer_params_rbcs
         this_expand_around = rbcs_min
@@ -405,7 +264,7 @@ for sfzi, spacing_from_zero in enumerate(spacing_from_zeros):
             
             xs = axis_var
             
-            tp = total_potential(axis_slice, tweezer_params, atom)
+            tp = bpl.total_potential(axis_slice, tweezer_params, atom)
 
             xyzaxis = ["x","y","z"][ci]
             ys = tp
@@ -415,13 +274,13 @@ for sfzi, spacing_from_zero in enumerate(spacing_from_zeros):
             fit_threshold_um = 0.5
             fit_y_ratio = 0.8
 
-            trap_freq, quad_popt = my_get_trap_frequency(xs,ys, mass,
+            trap_freq, quad_popt = bpl.my_get_trap_frequency(xs,ys, mass,
                                                             x_fit_threshold_um=fit_threshold_um,y_fit_threshold_ratio=fit_y_ratio,
                                                             x_bounds=(rbcs_min[ci]-0.3,rbcs_min[ci]+0.3))
             centre_position_um = quad_popt[0]
             centre_intensity_min = quad_popt[2]
             xs_fit = np.linspace(centre_position_um-fit_threshold_um,centre_position_um+fit_threshold_um,200)
-            ys_fit = quad(xs_fit, *quad_popt)
+            ys_fit = bpl.quad(xs_fit, *quad_popt)
             min_y_fit = np.min(ys_fit)
             # line_fit = ax.plot(xs_fit, ys_fit, lw=1, linestyle='-', c='red')
             fit_mins[0][ci] = centre_position_um
