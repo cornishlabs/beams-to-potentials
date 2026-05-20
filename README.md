@@ -164,6 +164,12 @@ List the named lab beams available to that example:
 uv run python examples\single_beam_summary.py --list
 ```
 
+Minimal two-tweezer distance scan:
+
+```powershell
+uv run python examples\simple_two_tweezer_distance_scan.py
+```
+
 Interactive two-tweezer overlap:
 
 ```powershell

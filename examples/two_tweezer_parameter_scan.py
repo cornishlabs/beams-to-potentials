@@ -119,7 +119,7 @@ def analyze_two_tweezer_scan(
 
 
 def plot_scan_results(results: Sequence[ScanResult]) -> None:
-    fig, axs = plt.subplots(3, 1, constrained_layout=True, sharex=True, figsize=(8, 8))
+    fig, axs = plt.subplots(3, 1, constrained_layout=True, sharex=True, figsize=(8, 8), height_ratios=[3,1,1])
     colours = plt.rcParams["axes.prop_cycle"].by_key()["color"]
     species_colours = ("#2571E1", "#EE2519")
 
